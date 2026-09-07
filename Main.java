@@ -1,56 +1,56 @@
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 public class Main {
     static Scanner scanner = new Scanner(System.in);
-    static double[] scores = new double[0];
+
+    static List<String> licensePlates = new ArrayList<>();
+
+    // Định dạng biển số, ví dụ: 30F-123.45
+    static final String LICENSE_PLATE_REGEX =
+            "^[0-9]{2}[A-Z]-[0-9]{3}\\.[0-9]{2}$";
 
     public static void main(String[] args) {
         int choice;
 
         do {
             displayMenu();
-            choice = inputInteger("Nhập lựa chọn của bạn: ");
+            choice = inputInteger("Lựa chọn của bạn: ");
 
             switch (choice) {
                 case 1:
-                    inputScores();
+                    addLicensePlates();
                     break;
 
                 case 2:
-                    displayScores();
+                    displayLicensePlates();
                     break;
 
                 case 3:
-                    calculateAverage();
+                    searchExactLicensePlate();
                     break;
 
                 case 4:
-                    findMaxAndMin();
+                    searchByProvinceCode();
                     break;
 
                 case 5:
-                    countPassAndFail();
+                    sortLicensePlates();
                     break;
 
                 case 6:
-                    sortAscending();
-                    break;
-
-                case 7:
-                    countGoodAndExcellent();
-                    break;
-
-                case 8:
                     System.out.println("Đã thoát chương trình.");
                     break;
 
                 default:
                     System.out.println(
-                            "Lựa chọn không hợp lệ. Vui lòng chọn từ 1 đến 8."
+                            "Lựa chọn không hợp lệ. Vui lòng chọn từ 1 đến 6."
                     );
             }
-        } while (choice != 8);
+        } while (choice != 6);
 
         scanner.close();
     }
@@ -58,177 +58,196 @@ public class Main {
     // Hiển thị menu
     public static void displayMenu() {
         System.out.println();
-        System.out.println("****************** QUẢN LÝ ĐIỂM SV ******************");
-        System.out.println("1. Nhập danh sách điểm sinh viên");
-        System.out.println("2. In danh sách điểm");
-        System.out.println("3. Tính điểm trung bình của các sinh viên");
-        System.out.println("4. Tìm điểm cao nhất và thấp nhất");
-        System.out.println("5. Đếm số lượng sinh viên đạt và trượt");
-        System.out.println("6. Sắp xếp điểm tăng dần");
-        System.out.println("7. Thống kê số lượng sinh viên giỏi và xuất sắc");
-        System.out.println("8. Thoát");
-        System.out.println("******************************************************");
+        System.out.println(
+                "**************** QUẢN LÝ BIỂN SỐ XE ****************"
+        );
+        System.out.println("1. Thêm các biển số xe");
+        System.out.println("2. Hiển thị danh sách biển số xe");
+        System.out.println("3. Tìm kiếm biển số xe");
+        System.out.println("4. Tìm biển số xe theo mã tỉnh");
+        System.out.println("5. Sắp xếp biển số xe tăng dần");
+        System.out.println("6. Thoát");
+        System.out.println(
+                "*****************************************************"
+        );
     }
 
-    // 1. Nhập danh sách điểm
-    public static void inputScores() {
-        System.out.println("\n--- NHẬP DANH SÁCH ĐIỂM ---");
+    // 1. Thêm các biển số xe
+    public static void addLicensePlates() {
+        System.out.println("\n--- THÊM BIỂN SỐ XE ---");
 
-        int numberOfStudents;
+        int quantity;
 
         do {
-            numberOfStudents = inputInteger(
-                    "Nhập số lượng sinh viên: "
+            quantity = inputInteger(
+                    "Nhập số lượng biển số muốn thêm: "
             );
 
-            if (numberOfStudents <= 0) {
+            if (quantity <= 0) {
                 System.out.println(
-                        "Số lượng sinh viên phải lớn hơn 0."
+                        "Số lượng phải lớn hơn 0."
                 );
             }
-        } while (numberOfStudents <= 0);
+        } while (quantity <= 0);
 
-        scores = new double[numberOfStudents];
+        for (int i = 0; i < quantity; i++) {
+            while (true) {
+                System.out.print(
+                        "Nhập biển số xe thứ " + (i + 1) + ": "
+                );
 
-        for (int i = 0; i < scores.length; i++) {
-            scores[i] = inputScore(
-                    "Nhập điểm sinh viên thứ " + (i + 1) + ": "
+                String licensePlate = scanner.nextLine()
+                        .trim()
+                        .toUpperCase();
+
+                if (!isValidLicensePlate(licensePlate)) {
+                    System.out.println(
+                            "Biển số không đúng định dạng."
+                    );
+                    System.out.println(
+                            "Định dạng đúng, ví dụ: 30F-123.45"
+                    );
+                    continue;
+                }
+
+                if (licensePlates.contains(licensePlate)) {
+                    System.out.println(
+                            "Biển số xe này đã tồn tại."
+                    );
+                    continue;
+                }
+
+                licensePlates.add(licensePlate);
+                System.out.println("Thêm biển số thành công.");
+                break;
+            }
+        }
+    }
+
+    // 2. Hiển thị danh sách biển số xe
+    public static void displayLicensePlates() {
+        System.out.println("\n--- DANH SÁCH BIỂN SỐ XE ---");
+
+        if (!hasLicensePlates()) {
+            return;
+        }
+
+        for (int i = 0; i < licensePlates.size(); i++) {
+            System.out.println(
+                    (i + 1) + ". " + licensePlates.get(i)
+            );
+        }
+    }
+
+    // 3. Tìm kiếm chính xác theo biển số xe
+    public static void searchExactLicensePlate() {
+        System.out.println("\n--- TÌM KIẾM BIỂN SỐ XE ---");
+
+        if (!hasLicensePlates()) {
+            return;
+        }
+
+        System.out.print("Nhập biển số xe cần tìm: ");
+
+        String searchPlate = scanner.nextLine()
+                .trim()
+                .toUpperCase();
+
+        if (!isValidLicensePlate(searchPlate)) {
+            System.out.println(
+                    "Biển số không đúng định dạng 30F-123.45."
+            );
+            return;
+        }
+
+        if (licensePlates.contains(searchPlate)) {
+            System.out.println(
+                    "Đã tìm thấy biển số xe: " + searchPlate
+            );
+        } else {
+            System.out.println(
+                    "Không tìm thấy biển số xe: " + searchPlate
+            );
+        }
+    }
+
+    // 4. Tìm biển số xe theo mã tỉnh
+    public static void searchByProvinceCode() {
+        System.out.println("\n--- TÌM THEO MÃ TỈNH ---");
+
+        if (!hasLicensePlates()) {
+            return;
+        }
+
+        String provinceCode;
+
+        while (true) {
+            System.out.print(
+                    "Nhập mã tỉnh gồm 2 chữ số, ví dụ 29 hoặc 30: "
+            );
+
+            provinceCode = scanner.nextLine().trim();
+
+            if (provinceCode.matches("^[0-9]{2}$")) {
+                break;
+            }
+
+            System.out.println(
+                    "Mã tỉnh phải bao gồm đúng 2 chữ số."
             );
         }
 
-        System.out.println("Nhập danh sách điểm thành công.");
-    }
+        boolean found = false;
 
-    // 2. In danh sách điểm
-    public static void displayScores() {
-        if (!hasScores()) {
-            return;
+        System.out.println(
+                "Các biển số xe có mã tỉnh " + provinceCode + ":"
+        );
+
+        for (String licensePlate : licensePlates) {
+            if (licensePlate.startsWith(provinceCode)) {
+                System.out.println("- " + licensePlate);
+                found = true;
+            }
         }
 
-        System.out.println("\n--- DANH SÁCH ĐIỂM ---");
-
-        for (int i = 0; i < scores.length; i++) {
-            System.out.printf(
-                    "Sinh viên thứ %d: %.2f%n",
-                    i + 1,
-                    scores[i]
+        if (!found) {
+            System.out.println(
+                    "Không tìm thấy biển số xe thuộc mã tỉnh "
+                            + provinceCode + "."
             );
         }
     }
 
-    // 3. Tính điểm trung bình
-    public static void calculateAverage() {
-        if (!hasScores()) {
+    // 5. Sắp xếp biển số xe tăng dần
+    public static void sortLicensePlates() {
+        System.out.println("\n--- SẮP XẾP BIỂN SỐ XE ---");
+
+        if (!hasLicensePlates()) {
             return;
         }
 
-        double total = 0;
-
-        for (double score : scores) {
-            total += score;
-        }
-
-        double average = total / scores.length;
-
-        System.out.printf(
-                "Điểm trung bình của các sinh viên: %.2f%n",
-                average
-        );
-    }
-
-    // 4. Tìm điểm cao nhất và thấp nhất
-    public static void findMaxAndMin() {
-        if (!hasScores()) {
-            return;
-        }
-
-        double max = scores[0];
-        double min = scores[0];
-
-        for (int i = 1; i < scores.length; i++) {
-            if (scores[i] > max) {
-                max = scores[i];
-            }
-
-            if (scores[i] < min) {
-                min = scores[i];
-            }
-        }
-
-        System.out.printf("Điểm cao nhất: %.2f%n", max);
-        System.out.printf("Điểm thấp nhất: %.2f%n", min);
-    }
-
-    // 5. Đếm sinh viên đạt và trượt
-    public static void countPassAndFail() {
-        if (!hasScores()) {
-            return;
-        }
-
-        int passed = 0;
-        int failed = 0;
-
-        for (double score : scores) {
-            if (score >= 5) {
-                passed++;
-            } else {
-                failed++;
-            }
-        }
-
-        System.out.println("Số sinh viên đạt: " + passed);
-        System.out.println("Số sinh viên trượt: " + failed);
-    }
-
-    // 6. Sắp xếp điểm tăng dần
-    public static void sortAscending() {
-        if (!hasScores()) {
-            return;
-        }
-
-        Arrays.sort(scores);
+        Collections.sort(licensePlates);
 
         System.out.println(
-                "Đã sắp xếp danh sách điểm theo thứ tự tăng dần."
+                "Đã sắp xếp biển số xe theo thứ tự tăng dần."
         );
 
-        displayScores();
+        displayLicensePlates();
     }
 
-    // 7. Thống kê sinh viên giỏi và xuất sắc
-    public static void countGoodAndExcellent() {
-        if (!hasScores()) {
-            return;
-        }
-
-        int good = 0;
-        int excellent = 0;
-
-        for (double score : scores) {
-            if (score >= 9) {
-                excellent++;
-            } else if (score >= 8) {
-                good++;
-            }
-        }
-
-        System.out.println(
-                "Số sinh viên giỏi (từ 8 đến dưới 9): " + good
-        );
-
-        System.out.println(
-                "Số sinh viên xuất sắc (từ 9 đến 10): " + excellent
-        );
-
-        System.out.println(
-                "Tổng số sinh viên giỏi và xuất sắc: "
-                        + (good + excellent)
+    // Kiểm tra định dạng biển số xe
+    public static boolean isValidLicensePlate(
+            String licensePlate
+    ) {
+        return Pattern.matches(
+                LICENSE_PLATE_REGEX,
+                licensePlate
         );
     }
 
-    // Kiểm tra danh sách đã có điểm chưa
-    public static boolean hasScores() {
-        if (scores.length == 0) {
+    // Kiểm tra danh sách có dữ liệu hay chưa
+    public static boolean hasLicensePlates() {
+        if (licensePlates.isEmpty()) {
             System.out.println(
                     "Danh sách đang trống. Hãy chọn chức năng 1 trước."
             );
@@ -238,7 +257,7 @@ public class Main {
         return true;
     }
 
-    // Nhập số nguyên và xử lý nhập sai
+    // Nhập và kiểm tra số nguyên
     public static int inputInteger(String message) {
         while (true) {
             System.out.print(message);
@@ -249,30 +268,6 @@ public class Main {
             } catch (NumberFormatException e) {
                 System.out.println(
                         "Dữ liệu không hợp lệ. Vui lòng nhập số nguyên."
-                );
-            }
-        }
-    }
-
-    // Nhập và kiểm tra điểm từ 0 đến 10
-    public static double inputScore(String message) {
-        while (true) {
-            System.out.print(message);
-            String input = scanner.nextLine();
-
-            try {
-                double score = Double.parseDouble(input);
-
-                if (score >= 0 && score <= 10) {
-                    return score;
-                }
-
-                System.out.println(
-                        "Điểm phải nằm trong khoảng từ 0 đến 10."
-                );
-            } catch (NumberFormatException e) {
-                System.out.println(
-                        "Điểm không hợp lệ. Vui lòng nhập lại."
                 );
             }
         }
